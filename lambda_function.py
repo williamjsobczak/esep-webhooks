@@ -1,23 +1,22 @@
-import json
 import os
 import requests
+import json
 
 def lambda_handler(event, context):
     try:
-        # Check if the event is an HTTP event with a body
-        if 'body' in event:
-            # Parse the JSON body
-            json_data = json.loads(event['body'])
+        # Log the received event
+        print(f'GitHub Event Received: {json.dumps(event)}')
 
-            # Check if the payload contains the GitHub challenge (Webhook validation)
-            if 'zen' in json_data:
-                return {
-                    'statusCode': 200,
-                    'body': json.dumps({'msg': 'GitHub Webhook validation successful!'})
-                }
+        # Check if the event is an HTTP event
+        if isinstance(event, dict):
+            # Parse the JSON data
+            json_data = event
+
+            # Log the parsed JSON data
+            print(f'Parsed JSON Data: {json.dumps(json_data)}')
 
             # Check if the payload contains information about the created issue
-            elif 'issue' in json_data and 'html_url' in json_data['issue']:
+            if 'issue' in json_data and 'html_url' in json_data['issue']:
                 # Extract the html_url of the created issue
                 issue_html_url = json_data['issue']['html_url']
                 print(f'Issue HTML URL: {issue_html_url}')
@@ -35,7 +34,8 @@ def lambda_handler(event, context):
                 if slack_url:
                     # Send the message to Slack
                     response = requests.post(slack_url, json=payload)
-                    print(f'Slack API Response: {response.status_code}')
+                    print(f'Slack API Response Code: {response.status_code}')
+                    print(f'Slack API Response Text: {response.text}')
 
                     return {
                         'statusCode': response.status_code,
@@ -54,10 +54,10 @@ def lambda_handler(event, context):
                     'body': json.dumps('Invalid GitHub Webhook payload. Missing required data.')
                 }
         else:
-            # If 'body' is not in the event, return an error response
+            # If the event is not a dictionary, return an error response
             return {
                 'statusCode': 400,
-                'body': json.dumps('Invalid event. Missing request body.')
+                'body': json.dumps('Invalid event. Expected a dictionary.')
             }
     except Exception as e:
         print(f'Error: {str(e)}')
