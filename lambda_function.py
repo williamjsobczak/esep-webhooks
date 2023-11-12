@@ -9,8 +9,15 @@ def lambda_handler(event, context):
             # Parse the JSON body
             json_data = json.loads(event['body'])
 
+            # Check if the payload contains the GitHub challenge (Webhook validation)
+            if 'zen' in json_data:
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'msg': 'GitHub Webhook validation successful!'})
+                }
+
             # Check if the payload contains information about the created issue
-            if 'issue' in json_data and 'html_url' in json_data['issue']:
+            elif 'issue' in json_data and 'html_url' in json_data['issue']:
                 # Extract the html_url of the created issue
                 issue_html_url = json_data['issue']['html_url']
                 print(f'Issue HTML URL: {issue_html_url}')
